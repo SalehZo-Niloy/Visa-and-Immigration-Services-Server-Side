@@ -16,6 +16,8 @@ const run = async () => {
     try {
         const serviceCollection = client.db('visa-immigration').collection('services');
 
+        const reviewCollection = client.db('visa-immigration').collection('reviews');
+
         app.get('/homeService', async (req, res) => {
             const query = {};
 
@@ -40,6 +42,13 @@ const run = async () => {
 
             const service = await serviceCollection.findOne(query);
             res.send(service);
+        })
+
+        app.post('/reviews', async (req, res) => {
+            const review = req.body;
+            // console.log(review);
+            const result = await reviewCollection.insertOne(review);
+            res.send(result);
         })
 
     }
