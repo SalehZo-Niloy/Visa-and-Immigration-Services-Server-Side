@@ -13,6 +13,9 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.SECRET_USER}:${process.env.SECRET_PASSWORD}@cluster0.yarpj5v.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+//----------------------------
+// JSON web token verify function
+//----------------------------
 function verifyJWT(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -30,10 +33,19 @@ function verifyJWT(req, res, next) {
 
 const run = async () => {
     try {
+        //----------------------------
+        // service collection from mongodb
+        //----------------------------
         const serviceCollection = client.db('visa-immigration').collection('services');
 
+        //----------------------------
+        // review collection from mongodb
+        //----------------------------
         const reviewCollection = client.db('visa-immigration').collection('reviews');
 
+        //----------------------------
+        // creating a jwt token for user
+        //----------------------------
         app.post('/jwt', (req, res) => {
             const user = req.body;
 
@@ -41,22 +53,37 @@ const run = async () => {
             res.send({ token });
         })
 
+        //----------------------------
+        // get api for service in home page
+        //----------------------------
         app.get('/homeService', async (req, res) => {
             const query = {};
+            const options = {
+                sort: { "$natural": -1 }
+            };
 
-            const cursor = serviceCollection.find(query);
+            const cursor = serviceCollection.find(query, options);
             const services = await cursor.limit(3).toArray();
             res.send(services);
         })
 
+        //----------------------------
+        // get api for all services page
+        //----------------------------
         app.get('/allServices', async (req, res) => {
             const query = {};
+            const options = {
+                sort: { "$natural": -1 }
+            };
 
-            const cursor = serviceCollection.find(query);
+            const cursor = serviceCollection.find(query, options);
             const services = await cursor.toArray();
             res.send(services);
         })
 
+        //----------------------------
+        // api for a specific service details
+        //----------------------------
         app.get('/serviceDetails/:id', async (req, res) => {
             const id = req.params.id;
             // console.log(id);
@@ -67,6 +94,9 @@ const run = async () => {
             res.send(service);
         })
 
+        //----------------------------
+        // api for adding a service
+        //----------------------------
         app.post('/service', async (req, res) => {
             const service = req.body;
             // console.log(service);
@@ -74,6 +104,9 @@ const run = async () => {
             res.send(result);
         })
 
+        //----------------------------
+        // getting review for specific services
+        //----------------------------
         app.get('/reviews/:id', async (req, res) => {
             const id = req.params.id;
             // console.log(id);
@@ -87,6 +120,9 @@ const run = async () => {
             res.send(reviews);
         })
 
+        //----------------------------
+        // getting all review of an user
+        //----------------------------
         app.get('/reviews', verifyJWT, async (req, res) => {
             const email = req.query?.email;
             // console.log(email);
@@ -105,6 +141,9 @@ const run = async () => {
             res.send(reviews);
         })
 
+        //----------------------------
+        // api for specific review
+        //----------------------------
         app.get('/review/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -113,6 +152,9 @@ const run = async () => {
             res.send(review);
         })
 
+        //----------------------------
+        // creating a review
+        //----------------------------
         app.post('/reviews', async (req, res) => {
             const review = req.body;
             review.date = new Date().toISOString();
@@ -121,6 +163,9 @@ const run = async () => {
             res.send(result);
         })
 
+        //----------------------------
+        // deleting a review
+        //----------------------------
         app.delete('/reviews/:id', async (req, res) => {
             const id = req.params.id;
             // console.log(id);
@@ -130,6 +175,9 @@ const run = async () => {
             res.send(result);
         })
 
+        //----------------------------
+        // updating a review
+        //----------------------------
         app.patch('/review/:id', async (req, res) => {
             const id = req.params.id;
             const updatedReview = req.body.userReview;
